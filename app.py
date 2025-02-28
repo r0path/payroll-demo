@@ -70,11 +70,13 @@ def process_payroll(current_user):
     result = payroll_service.process_payroll(data)
     return jsonify(result)
 
-# The vulnerable endpoint - missing token validation
 @app.route('/api/payroll/adjust', methods=['POST'])
 def adjust_salary():
     data = request.json
-    result = payroll_service.adjust_employee_salary(data)
+    token = None
+    if 'Authorization' in request.headers:
+        token = request.headers['Authorization'].split(" ")[1]
+    result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
 
 if __name__ == '__main__':

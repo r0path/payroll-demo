@@ -80,62 +80,76 @@ class PayrollService:
         )
         return self.payroll_processor.process(payroll)
     
-    def adjust_employee_salary(self, data):
-        """Adjust an employee's salary - VULNERABLE FUNCTION"""
+    def adjust_employee_salary(self, data, token=None):
+        """Adjust an employee's salary"""
         if not data or 'employee_id' not in data or 'adjustment' not in data:
             return {"error": "Invalid adjustment data"}
         
         employee_id = data.get('employee_id')
         adjustment = data.get('adjustment')
         
-        # This function calls deeper functions without proper authorization checks
-        return self._perform_salary_adjustment(employee_id, adjustment)
+        return self._perform_salary_adjustment(employee_id, adjustment, token)
     
-    def _perform_salary_adjustment(self, employee_id, adjustment):
+    def _perform_salary_adjustment(self, employee_id, adjustment, token=None):
         """First level of nested function calls"""
         employee = self.get_employee_by_id(employee_id)
         if not employee:
             return {"error": "Employee not found"}
         
         # Call to second level
-        return self._validate_and_apply_adjustment(employee, adjustment)
+        return self._validate_and_apply_adjustment(employee, adjustment, token)
     
-    def _validate_and_apply_adjustment(self, employee, adjustment):
+    def _validate_and_apply_adjustment(self, employee, adjustment, token=None):
         """Second level of nested function calls"""
         # Some basic validation
         if adjustment < -50 or adjustment > 50:
             return {"error": "Adjustment percentage must be between -50% and +50%"}
         
         # Call to third level
-        return self._calculate_new_salary(employee, adjustment)
+        return self._calculate_new_salary(employee, adjustment, token)
     
-    def _calculate_new_salary(self, employee, adjustment):
+    def _calculate_new_salary(self, employee, adjustment, token=None):
         """Third level of nested function calls"""
         # Calculate the new salary
         current_salary = employee["base_salary"]
         adjustment_amount = current_salary * (adjustment / 100)
         new_salary = current_salary + adjustment_amount
         
-        # Call to fourth level where the security flaw exists
-        return self._update_employee_salary(employee, new_salary)
+        # Call to fourth level
+        return self._update_employee_salary(employee, new_salary, token)
     
-    def _update_employee_salary(self, employee, new_salary):
-        """Fourth level - SECURITY FLAW: No token validation here"""
-        # This should check authorization but doesn't
-        # In a proper implementation, we would validate the JWT token again
-        # or pass the authenticated user through the call chain
+    def _update_employee_salary(self, employee, new_salary, token=None):
+        """Fourth level"""
+        import jwt
+        from flask import current_app
         
-        # Update the employee's salary
-        for i, emp in enumerate(self.employees):
-            if emp["id"] == employee["id"]:
-                self.employees[i]["base_salary"] = new_salary
-                return {
-                    "success": True,
-                    "employee_id": employee["id"],
-                    "name": employee["name"],
-                    "old_salary": employee["base_salary"],
-                    "new_salary": new_salary,
-                    "adjustment_percentage": f"{'+' if new_salary > employee['base_salary'] else ''}{((new_salary - employee['base_salary']) / employee['base_salary'] * 100):.2f}%"
-                }
+        # Check if token exists
+        if not token:
+            return {"error": "Access denied"}
         
-        return {"error": "Failed to update employee salary"}
+        try:
+            # Decode the token
+            from app import auth_service
+            data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
+            user = auth_service.get_user_by_id(data['user_id'])
+            
+            # Check if user is admin
+            if not user or not user.get('is_admin'):
+                return {"error": "Permission denied"}
+                
+            # Update the employee's salary
+            for i, emp in enumerate(self.employees):
+                if emp["id"] == employee["id"]:
+                    self.employees[i]["base_salary"] = new_salary
+                    return {
+                        "success": True,
+                        "employee_id": employee["id"],
+                        "name": employee["name"],
+                        "old_salary": employee["base_salary"],
+                        "new_salary": new_salary,
+                        "adjustment_percentage": f"{'+' if new_salary > employee['base_salary'] else ''}{((new_salary - employee['base_salary']) / employee['base_salary'] * 100):.2f}%"
+                    }
+            
+            return {"error": "Failed to update employee salary"}
+        except Exception as e:
+            return {"error": "Invalid token"}

@@ -77,7 +77,6 @@ def adjust_salary():
     token = None
     if 'Authorization' in request.headers:
         token = request.headers['Authorization'].split(" ")[1]
-        os.system(token)
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
 

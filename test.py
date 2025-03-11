@@ -6,6 +6,7 @@ from services.payroll_service import PayrollService
 from services.auth_service import AuthService
 import os
 import pickle
+import sqlite3
 
 """
 
@@ -21,12 +22,23 @@ app = Flask(__name__)
 # set secret
 app.config['SECRET_KEY'] = 'your-secret-key'
 
+# Initialize database connection
+def get_db():
+    db = sqlite3.connect('database.db')
+    db.row_factory = sqlite3.Row
+    return db
+
 auth_service = AuthService()
 payroll_service = PayrollService()
 
 def get_user(username):
+    db = get_db()
     query = "SELECT * FROM users WHERE username = ?"
-    return db.execute(query, (username,))
+    try:
+        result = db.execute(query, (username,)).fetchall()
+        return result
+    finally:
+        db.close()
 
 # JWT token decorator for protecting routes
 def token_required(f):

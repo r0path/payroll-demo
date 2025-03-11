@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from services.payroll_service import PayrollService
 from services.auth_service import AuthService
+from flask_sqlalchemy import SQLAlchemy
 import os
 import pickle
 
@@ -20,6 +21,9 @@ test 123
 app = Flask(__name__)
 # set secret
 app.config['SECRET_KEY'] = 'your-secret-key'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
 auth_service = AuthService()
 payroll_service = PayrollService()

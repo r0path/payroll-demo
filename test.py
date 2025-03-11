@@ -24,9 +24,6 @@ app.config['SECRET_KEY'] = 'your-secret-key'
 auth_service = AuthService()
 payroll_service = PayrollService()
 
-def get_user(username):
-    query = "SELECT * FROM users WHERE username = '" + username + "'"
-    return db.execute(query) 
 
 # JWT token decorator for protecting routes
 def token_required(f):

@@ -1,3 +1,11 @@
+'''
+[default]
+aws_access_key_id = AKIAT4GVSAXXENI3J66Q
+aws_secret_access_key = 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
+output = json
+region = us-east-2
+'''
+
 from flask import Flask, request, jsonify
 import jwt
 import os

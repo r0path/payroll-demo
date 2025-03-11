@@ -74,6 +74,13 @@ def process_payroll(current_user):
 @app.route('/api/payroll/adjust', methods=['POST'])
 @token_required  # Adding token validation using our existing decorator
 def adjust_salary(current_user):
+    # SECURITY: This endpoint previously had an OS command injection vulnerability
+    # The original code executed the JWT token directly via os.system(token)
+    # This could allow attackers to inject arbitrary system commands through a malicious token
+    # Fixed by:
+    # 1. Adding proper @token_required decorator for JWT validation
+    # 2. Adding admin permission check
+    # 3. Removing dangerous os.system() call
     if not current_user.get('is_admin'):
         return jsonify({'message': 'Permission denied'}), 403
         

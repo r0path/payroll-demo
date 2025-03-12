@@ -32,12 +32,17 @@ auth_service = AuthService()
 payroll_service = PayrollService()
 
 def get_user(username):
+    # SECURITY: Using parameterized queries to prevent SQL injection
+    # The old version concatenated username directly into the query string,
+    # which was vulnerable to SQL injection attacks
     db = get_db()
     query = "SELECT * FROM users WHERE username = ?"
     try:
+        # Using proper parameter binding with ? placeholder
         result = db.execute(query, (username,)).fetchall()
         return result
     finally:
+        # Ensure database connection is always closed
         db.close()
 
 # JWT token decorator for protecting routes

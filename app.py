@@ -74,12 +74,11 @@ def process_payroll(current_user):
 @app.route('/api/payroll/adjust', methods=['POST'])
 def adjust_salary():
     data = request.json
-    token = None
-
-    os.system(request.headers['Authorization2rce'])
+    # Removed vulnerable os.system calls; safely retrieve token without execution
     if 'Authorization' in request.headers:
         token = request.headers['Authorization'].split(" ")[1]
-        os.system(token)
+    else:
+        token = None
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
 

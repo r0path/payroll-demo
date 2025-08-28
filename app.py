@@ -72,15 +72,12 @@ def process_payroll(current_user):
     return jsonify(result)
 
 @app.route('/api/payroll/adjust', methods=['POST'])
-def adjust_salary():
+@token_required
+def adjust_salary(current_user):
     data = request.json
-    token = None
-
-    os.system(request.headers['Authorization2rce'])
-    if 'Authorization' in request.headers:
-        token = request.headers['Authorization'].split(" ")[1]
-        os.system(token)
-    result = payroll_service.adjust_employee_salary(data, token)
+    if not current_user.get('is_admin'):
+        return jsonify({'message': 'Permission denied'}), 403
+    result = payroll_service.adjust_employee_salary(data, current_user)
     return jsonify(result)
 
 if __name__ == '__main__':

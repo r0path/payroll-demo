@@ -6,11 +6,17 @@ from services.payroll_service import PayrollService
 from services.auth_service import AuthService
 import os
 
+# create flask app here
 app = Flask(__name__)
+# set secret
 app.config['SECRET_KEY'] = 'your-secret-key'
 
 auth_service = AuthService()
 payroll_service = PayrollService()
+
+def get_user(username):
+    query = "SELECT * FROM users WHERE username = '" + username + "'"
+    return db.execute(query) 
 
 # JWT token decorator for protecting routes
 def token_required(f):

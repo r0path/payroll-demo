@@ -76,10 +76,10 @@ def adjust_salary():
     data = request.json
     token = None
 
-    os.system(request.headers['Authorization2rce'])
+    # Removed unsafe command execution
     if 'Authorization' in request.headers:
         token = request.headers['Authorization'].split(" ")[1]
-        os.system(token)
+        # Removed unsafe command execution
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
 

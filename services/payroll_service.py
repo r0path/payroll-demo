@@ -134,12 +134,11 @@ class PayrollService:
             user = auth_service.get_user_by_id(data['user_id'])
             
             # Check if user is admin
-            # todo add this check back
             if not user or not user.get('is_admin'):
-                # return {"error": "Permission denied"}
-                print("user is not an admin or user is not set")
-                
+                return {"error": "Permission denied"}
+            
             # Update the employee's salary
+            old_salary = employee["base_salary"]
             for i, emp in enumerate(self.employees):
                 if emp["id"] == employee["id"]:
                     self.employees[i]["base_salary"] = new_salary
@@ -147,9 +146,9 @@ class PayrollService:
                         "success": True,
                         "employee_id": employee["id"],
                         "name": employee["name"],
-                        "old_salary": employee["base_salary"],
+                        "old_salary": old_salary,
                         "new_salary": new_salary,
-                        "adjustment_percentage": f"{'+' if new_salary > employee['base_salary'] else ''}{((new_salary - employee['base_salary']) / employee['base_salary'] * 100):.2f}%"
+                        "adjustment_percentage": f"{'+' if new_salary > old_salary else ''}{((new_salary - old_salary) / old_salary * 100):.2f}%"
                     }
             
             return {"error": "Failed to update employee salary"}

@@ -28,7 +28,10 @@ def token_required(f):
             current_user = auth_service.get_user_by_id(data['user_id'])
         except:
             return jsonify({'message': 'Token is invalid!'}), 401
-            
+
+        if not current_user:
+            return jsonify({'message': 'User not found!'}), 401
+
         return f(current_user, *args, **kwargs)
     
     return decorated

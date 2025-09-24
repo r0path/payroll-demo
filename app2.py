@@ -25,7 +25,9 @@ auth_service = AuthService()
 payroll_service = PayrollService()
 
 def get_user(username):
-    query = "SELECT * FROM users WHERE username = '" + username + "'"
+    # Escape single quotes to mitigate SQL injection when parameterized APIs are unavailable
+    safe_username = username.replace("'", "''")
+    query = "SELECT * FROM users WHERE username = '" + safe_username + "'"
     return db.execute(query) 
 
 # JWT token decorator for protecting routes

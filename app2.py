@@ -19,7 +19,11 @@ test 123
 # create flask app here
 app = Flask(__name__)
 # set secret
-app.config['SECRET_KEY'] = 'your-secret-key'
+# load SECRET_KEY from environment to avoid hardcoding; fail fast if not provided
+try:
+    app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
+except KeyError:
+    raise RuntimeError("SECRET_KEY environment variable not set. Set it to a strong secret for signing JWTs.")
 
 auth_service = AuthService()
 payroll_service = PayrollService()

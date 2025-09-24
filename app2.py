@@ -54,7 +54,7 @@ def login():
     auth = request.json
     
     if not auth or not auth.get('username') or not auth.get('password'):
-        return jsonify({'message': 'Could not verify'}), 401
+        return jsonify({'message': 'Invalid credentials'}), 401
     
     user = auth_service.authenticate_user(auth.get('username'), auth.get('password'))
     

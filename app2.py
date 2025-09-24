@@ -19,7 +19,9 @@ test 123
 # create flask app here
 app = Flask(__name__)
 # set secret
-app.config['SECRET_KEY'] = 'your-secret-key'
+# Load secret from environment or generate a secure random secret for this process.
+# Note: Without a persistent SECRET_KEY (e.g., via env var), issued tokens will be invalid across restarts.
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or __import__('secrets').token_urlsafe(64)
 
 auth_service = AuthService()
 payroll_service = PayrollService()

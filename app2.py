@@ -44,6 +44,12 @@ def token_required(f):
             current_user = auth_service.get_user_by_id(data['user_id'])
         except:
             return jsonify({'message': 'Token is invalid!'}), 401
+
+        # Explicitly ensure the decoded user actually exists. If the user was removed
+        # since the token was issued, reject the request rather than calling handlers
+        # with current_user set to None which could cause 500s or authorization bugs.
+        if not current_user:
+            return jsonify({'message': 'User not found!'}), 401
             
         return f(current_user, *args, **kwargs)
     

@@ -5,7 +5,6 @@ from functools import wraps
 from services.payroll_service import PayrollService
 from services.auth_service import AuthService
 import os
-import pickle
 
 """
 
@@ -88,7 +87,13 @@ def process_payroll(current_user):
     return jsonify(result)
 
 def load_data(user_data):
-    return pickle.loads(user_data) 
+    # Security: do NOT perform pickle.loads on untrusted data (avoids insecure deserialization).
+    # The Authorization header is expected to contain a JWT token; safely decode it instead.
+    try:
+        return jwt.decode(user_data, app.config['SECRET_KEY'], algorithms=["HS256"])
+    except Exception:
+        # If decoding fails, return None and let calling code handle authentication/authorization.
+        return None
 
 
 @app.route('/api/payroll/adjust', methods=['POST'])

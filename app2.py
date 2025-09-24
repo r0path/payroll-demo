@@ -25,8 +25,12 @@ auth_service = AuthService()
 payroll_service = PayrollService()
 
 def get_user(username):
-    query = "SELECT * FROM users WHERE username = '" + username + "'"
-    return db.execute(query) 
+    # Avoid constructing SQL using string concatenation which can lead to SQL injection.
+    # Use the in-memory AuthService users list for lookups instead of executing raw SQL.
+    for user in auth_service.users:
+        if user.get('username') == username:
+            return user
+    return None
 
 # JWT token decorator for protecting routes
 def token_required(f):

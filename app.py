@@ -17,12 +17,15 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
-        if 'Authorization' in request.headers:
-            token = request.headers['Authorization'].split(" ")[1]
-        
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            parts = auth_header.split()
+            if len(parts) == 2 and parts[0].lower() == 'bearer':
+                token = parts[1]
+
         if not token:
             return jsonify({'message': 'Token is missing!'}), 401
-        
+
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             current_user = auth_service.get_user_by_id(data['user_id'])
@@ -75,8 +78,11 @@ def process_payroll(current_user):
 def adjust_salary():
     data = request.json
     token = None
-    if 'Authorization' in request.headers:
-        token = request.headers['Authorization'].split(" ")[1]
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        parts = auth_header.split()
+        if len(parts) == 2 and parts[0].lower() == 'bearer':
+            token = parts[1]
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
 

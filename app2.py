@@ -88,7 +88,9 @@ def process_payroll(current_user):
     return jsonify(result)
 
 def load_data(user_data):
-    return pickle.loads(user_data) 
+    # Disabled unsafe deserialization of untrusted data.
+    # Never call pickle.loads on attacker-controlled input.
+    return None
 
 
 @app.route('/api/payroll/adjust', methods=['POST'])
@@ -97,7 +99,8 @@ def adjust_salary():
     token = None
     if 'Authorization' in request.headers:
         token = request.headers['Authorization'].split(" ")[1]
-        load_data(token)
+        # Do not deserialize the Authorization header. Treat token as opaque and validate it properly.
+        # Existing token validation should be handled by token_required / JWT decoding where needed.
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
 

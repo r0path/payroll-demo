@@ -17,9 +17,14 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
-        if 'Authorization' in request.headers:
-            token = request.headers['Authorization'].split(" ")[1]
-        
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            parts = auth_header.split(" ", 1)
+            if len(parts) == 2 and parts[1].strip():
+                token = parts[1].strip()
+            else:
+                return jsonify({'message': 'Token is missing or malformed!'}), 401
+
         if not token:
             return jsonify({'message': 'Token is missing!'}), 401
         

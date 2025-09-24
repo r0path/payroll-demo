@@ -94,10 +94,21 @@ def load_data(user_data):
 @app.route('/api/payroll/adjust', methods=['POST'])
 def adjust_salary():
     data = request.json
-    token = None
-    if 'Authorization' in request.headers:
-        token = request.headers['Authorization'].split(" ")[1]
-        load_data(token)
+    # Require a valid Authorization header and ensure caller is an admin
+    if 'Authorization' not in request.headers:
+        return jsonify({'message': 'Token is missing!'}), 401
+
+    token = request.headers['Authorization'].split(" ")[1]
+
+    try:
+        decoded = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+        current_user = auth_service.get_user_by_id(decoded['user_id'])
+    except Exception:
+        return jsonify({'message': 'Token is invalid!'}), 401
+
+    if not current_user or not current_user.get('is_admin'):
+        return jsonify({'message': 'Permission denied'}), 403
+
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
 

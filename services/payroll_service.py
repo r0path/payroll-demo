@@ -142,14 +142,17 @@ class PayrollService:
             # Update the employee's salary
             for i, emp in enumerate(self.employees):
                 if emp["id"] == employee["id"]:
+                    # Capture the prior salary before mutating the record to ensure correct reporting
+                    old_salary = employee["base_salary"]
                     self.employees[i]["base_salary"] = new_salary
+                    adjustment_percentage = f"{'+' if new_salary > old_salary else ''}{((new_salary - old_salary) / old_salary * 100):.2f}%"
                     return {
                         "success": True,
                         "employee_id": employee["id"],
                         "name": employee["name"],
-                        "old_salary": employee["base_salary"],
+                        "old_salary": old_salary,
                         "new_salary": new_salary,
-                        "adjustment_percentage": f"{'+' if new_salary > employee['base_salary'] else ''}{((new_salary - employee['base_salary']) / employee['base_salary'] * 100):.2f}%"
+                        "adjustment_percentage": adjustment_percentage
                     }
             
             return {"error": "Failed to update employee salary"}

@@ -7,7 +7,12 @@ from services.auth_service import AuthService
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'
+secret = os.environ.get('SECRET_KEY')
+if not secret:
+    import warnings
+    warnings.warn("SECRET_KEY environment variable not set. Generating a random secret key for this process. Set SECRET_KEY in production to a fixed, secure value.", RuntimeWarning)
+    secret = os.urandom(32)
+app.config['SECRET_KEY'] = secret
 
 auth_service = AuthService()
 payroll_service = PayrollService()

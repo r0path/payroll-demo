@@ -127,31 +127,40 @@ class PayrollService:
         if not token:
             return {"error": "Access denied"}
         
+        # Require token to be a JWT string (three parts separated by dots) to avoid unsafe deserialization
+        if not isinstance(token, str) or token.count('.') != 2:
+            return {"error": "Invalid token"}
+
         try:
             # Decode the token
             from app import auth_service
             data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
-            user = auth_service.get_user_by_id(data['user_id'])
+            user = auth_service.get_user_by_id(data.get('user_id'))
             
             # Check if user is admin
-            # todo add this check back
             if not user or not user.get('is_admin'):
-                # return {"error": "Permission denied"}
-                print("user is not an admin or user is not set")
+                return {"error": "Permission denied"}
                 
             # Update the employee's salary
             for i, emp in enumerate(self.employees):
                 if emp["id"] == employee["id"]:
+                    old_salary = emp.get("base_salary")
                     self.employees[i]["base_salary"] = new_salary
+                    try:
+                        adjustment_percentage = f"{'+' if new_salary > old_salary else ''}{((new_salary - old_salary) / old_salary * 100):.2f}%"
+                    except Exception:
+                        adjustment_percentage = "N/A"
                     return {
                         "success": True,
                         "employee_id": employee["id"],
                         "name": employee["name"],
-                        "old_salary": employee["base_salary"],
+                        "old_salary": old_salary,
                         "new_salary": new_salary,
-                        "adjustment_percentage": f"{'+' if new_salary > employee['base_salary'] else ''}{((new_salary - employee['base_salary']) / employee['base_salary'] * 100):.2f}%"
+                        "adjustment_percentage": adjustment_percentage
                     }
             
             return {"error": "Failed to update employee salary"}
-        except Exception as e:
+        except (jwt.ExpiredSignatureError, jwt.DecodeError, jwt.InvalidTokenError):
+            return {"error": "Invalid token"}
+        except Exception:
             return {"error": "Invalid token"}

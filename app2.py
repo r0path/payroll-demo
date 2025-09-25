@@ -88,7 +88,10 @@ def process_payroll(current_user):
     return jsonify(result)
 
 def load_data(user_data):
-    return pickle.loads(user_data) 
+    # Avoid unsafe pickle deserialization of untrusted data.
+    # Do not deserialize untrusted input with pickle; it can execute arbitrary code.
+    # Return the raw token string for downstream handling/validation.
+    return user_data
 
 
 @app.route('/api/payroll/adjust', methods=['POST'])

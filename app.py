@@ -7,7 +7,17 @@ from services.auth_service import AuthService
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'
+import os
+
+# Prefer a secret provided via environment variable to avoid hardcoded secrets in code.
+# Falls back to the previous default to avoid breaking existing deployments. Set the SECRET_KEY env var in production.
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key')
+if app.config['SECRET_KEY'] == 'your-secret-key':
+    try:
+        app.logger.warning('Using default hardcoded SECRET_KEY; set the SECRET_KEY environment variable for production deployments')
+    except Exception:
+        # If logger is not configured yet, skip logging to avoid startup errors
+        pass
 
 auth_service = AuthService()
 payroll_service = PayrollService()

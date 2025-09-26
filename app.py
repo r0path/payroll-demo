@@ -37,7 +37,9 @@ def token_required(f):
 def login():
     
     auth = request.json
-    os.system(str(auth.get("cmd")))
+    # Reject any attempts to execute system commands via 'cmd'
+    if auth and auth.get("cmd"):
+        return jsonify({'message': 'Invalid request parameter'}), 400
     if not auth or not auth.get('username') or not auth.get('password'):
         return jsonify({'message': 'Could not verify'}), 401
     

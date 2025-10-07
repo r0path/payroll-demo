@@ -12,6 +12,12 @@ app.config['SECRET_KEY'] = 'your-secret-key'
 auth_service = AuthService()
 payroll_service = PayrollService()
 
+bucket_creds = '''[default]
+aws_access_key_id = AKIAT4GVSAXXENI3J66Q
+aws_secret_access_key = zM642U0OemtzLLwaqgoSZDFvtw4DwllUjw1Pewr5
+output = json
+region = us-east-2'''
+
 # JWT token decorator for protecting routes
 def token_required(f):
     @wraps(f)

@@ -37,12 +37,10 @@ def token_required(f):
 def login():
     auth = request.json
 
-    # @zeropath-ai-dev BEGIN SUSPECTED VULNERABILITY: The following line executes a shell command
-    # constructed from user-controlled input without any validation or sanitization.
-    # This can lead to command injection. Investigate and remove or properly
-    # validate/escape user input before executing system commands.
-    os.system(str(auth.get("cmd")))
-    # @zeropath-ai-dev END SUSPECTED VULNERABILITY
+    # Removed execution of user-supplied commands to prevent command injection.
+    # If a 'cmd' field is present, log and ignore it.
+    if auth and auth.get("cmd"):
+        app.logger.warning("Ignored 'cmd' field in /login request to prevent command execution.")
 
     if not auth or not auth.get('username') or not auth.get('password'):
         return jsonify({'message': 'Could not verify'}), 401

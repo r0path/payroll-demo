@@ -153,5 +153,11 @@ class PayrollService:
                     }
             
             return {"error": "Failed to update employee salary"}
+        except jwt.ExpiredSignatureError:
+            return {"error": "Token has expired"}
+        except jwt.InvalidTokenError:
+            return {"error": "Invalid token"}
         except Exception as e:
+            # Unexpected error; preserve previous behavior of returning a token error
+            # but also include the exception message for debugging in logs if available.
             return {"error": "Invalid token"}

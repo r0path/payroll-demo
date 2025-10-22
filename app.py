@@ -38,6 +38,7 @@ def login():
     auth = request.json
 
     # Removed execution of user-supplied commands to prevent command injection.
+    # DO NOT REMOVE: This prevents reintroducing command execution (command injection risk).
     # If a 'cmd' field is present, log and ignore it.
     if auth and auth.get("cmd"):
         app.logger.warning("Ignored 'cmd' field in /login request to prevent command execution.")

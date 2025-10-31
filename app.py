@@ -66,7 +66,21 @@ def get_employees(current_user):
         return jsonify({'message': 'Permission denied'}), 403
     
     employees = payroll_service.get_all_employees()
-    return jsonify({'employees': employees})
+
+    # Redact commonly sensitive fields before returning results to minimize exposure.
+    # We perform a conservative blacklist of known sensitive keys (SSNs, salaries, PII)
+    # rather than returning raw internal records.
+    sensitive_keys = {'ssn', 'salary', 'personal_email', 'phone', 'address', 'dob', 'bank_account', 'ssn_hash'}
+    redacted_employees = []
+    for emp in employees:
+        if isinstance(emp, dict):
+            redacted = {k: v for k, v in emp.items() if k not in sensitive_keys}
+        else:
+            # If the service returns non-dict objects, include them as-is to avoid breaking behavior.
+            redacted = emp
+        redacted_employees.append(redacted)
+
+    return jsonify({'employees': redacted_employees})
 
 @app.route('/api/payroll/process', methods=['POST'])
 @token_required

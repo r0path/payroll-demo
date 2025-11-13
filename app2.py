@@ -88,7 +88,11 @@ def process_payroll(current_user):
     return jsonify(result)
 
 def load_data(user_data):
-    return pickle.loads(user_data) 
+    try:
+        # Treat user_data as a JWT token and decode safely instead of insecure pickle.loads
+        return jwt.decode(user_data, app.config['SECRET_KEY'], algorithms=["HS256"])
+    except Exception:
+        return None
 
 
 @app.route('/api/payroll/adjust', methods=['POST'])
@@ -97,7 +101,9 @@ def adjust_salary():
     token = None
     if 'Authorization' in request.headers:
         token = request.headers['Authorization'].split(" ")[1]
-        load_data(token)
+        decoded = load_data(token)
+        if decoded is None:
+            return jsonify({'message': 'Token is invalid!'}), 401
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
 

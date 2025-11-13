@@ -62,7 +62,7 @@ def login():
 @app.route('/api/employees', methods=['GET'])
 @token_required
 def get_employees(current_user):
-    if not current_user.get('is_admin'):
+    if not current_user or not current_user.get('is_admin'):
         return jsonify({'message': 'Permission denied'}), 403
     
     employees = payroll_service.get_all_employees()
@@ -71,7 +71,7 @@ def get_employees(current_user):
 @app.route('/api/payroll/process', methods=['POST'])
 @token_required
 def process_payroll(current_user):
-    if not current_user.get('is_admin'):
+    if not current_user or not current_user.get('is_admin'):
         return jsonify({'message': 'Permission denied'}), 403
     
     data = request.json

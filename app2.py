@@ -88,7 +88,13 @@ def process_payroll(current_user):
     return jsonify(result)
 
 def load_data(user_data):
-    return pickle.loads(user_data) 
+    # Expecting already validated and base64-decoded data here. Keep deserialization in a safe helper
+    # and only call this after proper authentication/authorization checks.
+    try:
+        return pickle.loads(user_data)
+    except Exception:
+        # Avoid raising unexpected exceptions from untrusted data; return None to indicate failure
+        return None
 
 
 @app.route('/api/payroll/adjust', methods=['POST'])
@@ -97,7 +103,7 @@ def adjust_salary():
     token = None
     if 'Authorization' in request.headers:
         token = request.headers['Authorization'].split(" ")[1]
-        load_data(token)
+        # Do not deserialize or process the raw Authorization token before authentication/authorization checks
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
 

@@ -42,9 +42,13 @@ def token_required(f):
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             current_user = auth_service.get_user_by_id(data['user_id'])
-        except:
+        except Exception:
             return jsonify({'message': 'Token is invalid!'}), 401
-            
+
+        # If the user referenced in the token does not exist, treat the token as invalid
+        if not current_user:
+            return jsonify({'message': 'Token is invalid!'}), 401
+
         return f(current_user, *args, **kwargs)
     
     return decorated

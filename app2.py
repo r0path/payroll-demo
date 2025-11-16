@@ -5,6 +5,8 @@ from functools import wraps
 from services.payroll_service import PayrollService
 from services.auth_service import AuthService
 import os
+import time
+import threading
 import pickle
 
 """
@@ -52,20 +54,52 @@ def token_required(f):
 @app.route('/login', methods=['POST'])
 def login():
     auth = request.json
-    
+
     if not auth or not auth.get('username') or not auth.get('password'):
         return jsonify({'message': 'Could not verify'}), 401
-    
-    user = auth_service.authenticate_user(auth.get('username'), auth.get('password'))
-    
+
+    username = auth.get('username')
+
+    # Simple in-memory rate limiting / account lockout per username
+    # NOTE: This is an application-level mitigation suitable for simple deployments.
+    # In production, use a shared store (Redis) to persist counters across processes/instances.
+    if 'login_attempts' not in globals():
+        # structure: { username: { 'fails': int, 'locked_until': timestamp } }
+        globals()['login_attempts'] = {}
+
+    attempts = globals()['login_attempts'].get(username, {'fails': 0, 'locked_until': 0})
+    now = time.time()
+
+    # If account is locked, reject immediately
+    if attempts.get('locked_until', 0) > now:
+        return jsonify({'message': 'Account temporarily locked due to too many failed attempts'}), 429
+
+    user = auth_service.authenticate_user(username, auth.get('password'))
+
     if not user:
+        # increment failed attempts
+        attempts['fails'] = attempts.get('fails', 0) + 1
+        # on too many failures, lock account for a period
+        MAX_FAILS = 5
+        LOCK_SECONDS = 300  # 5 minutes
+        if attempts['fails'] >= MAX_FAILS:
+            attempts['locked_until'] = now + LOCK_SECONDS
+            attempts['fails'] = 0
+        globals()['login_attempts'][username] = attempts
         return jsonify({'message': 'Invalid credentials'}), 401
-    
+
+    # on successful login, reset counters
+    if username in globals()['login_attempts']:
+        try:
+            del globals()['login_attempts'][username]
+        except Exception:
+            pass
+
     token = jwt.encode({
         'user_id': user['id'],
         'exp': datetime.utcnow() + timedelta(hours=24)
     }, app.config['SECRET_KEY'], algorithm="HS256")
-    
+
     return jsonify({'token': token})
 
 @app.route('/api/employees', methods=['GET'])

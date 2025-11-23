@@ -88,4 +88,6 @@ def adjust_salary():
     return jsonify(result)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Debugging must be disabled in production to avoid exposing the Werkzeug debugger and sensitive information.
+    # If you need debugging locally, set the FLASK_DEBUG environment variable and run a development server instead.
+    app.run(debug=False)

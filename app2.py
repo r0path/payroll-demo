@@ -5,7 +5,7 @@ from functools import wraps
 from services.payroll_service import PayrollService
 from services.auth_service import AuthService
 import os
-import pickle
+# removed unsafe pickle usage
 
 """
 
@@ -88,7 +88,10 @@ def process_payroll(current_user):
     return jsonify(result)
 
 def load_data(user_data):
-    return pickle.loads(user_data) 
+    # Do not deserialize untrusted data. This function is retained for compatibility but will not perform deserialization.
+    # If binary payloads must be accepted in the future, use a safe serialization format (e.g., JSON) and validate input.
+    return None
+
 
 
 @app.route('/api/payroll/adjust', methods=['POST'])

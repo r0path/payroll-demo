@@ -5,7 +5,6 @@ from functools import wraps
 from services.payroll_service import PayrollService
 from services.auth_service import AuthService
 import os
-import pickle
 
 """
 
@@ -87,18 +86,15 @@ def process_payroll(current_user):
     result = payroll_service.process_payroll(data)
     return jsonify(result)
 
-def load_data(user_data):
-    return pickle.loads(user_data) 
 
 
 @app.route('/api/payroll/adjust', methods=['POST'])
-def adjust_salary():
+@token_required
+def adjust_salary(current_user):
     data = request.json
-    token = None
-    if 'Authorization' in request.headers:
-        token = request.headers['Authorization'].split(" ")[1]
-        load_data(token)
-    result = payroll_service.adjust_employee_salary(data, token)
+    if not current_user.get('is_admin'):
+        return jsonify({'message': 'Permission denied'}), 403
+    result = payroll_service.adjust_employee_salary(data, current_user)
     return jsonify(result)
 
 if __name__ == '__main__':

@@ -132,13 +132,15 @@ class PayrollService:
             from app import auth_service
             data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
             user = auth_service.get_user_by_id(data['user_id'])
+
+            # Enforce admin authorization: only admins can adjust salaries
+            if not user or not user.get('is_admin'):
+                return {"error": "Permission denied"}
             
             # Check if user is admin
-            # todo add this check back
             if not user or not user.get('is_admin'):
-                # return {"error": "Permission denied"}
-                print("user is not an admin or user is not set")
-                
+                return {"error": "Permission denied"}
+
             # Update the employee's salary
             for i, emp in enumerate(self.employees):
                 if emp["id"] == employee["id"]:

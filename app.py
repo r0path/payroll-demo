@@ -7,7 +7,11 @@ from services.auth_service import AuthService
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'
+# Prefer an environment-provided secret in production; fall back to a securely generated ephemeral key.
+import os, secrets, warnings
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or secrets.token_urlsafe(32)
+if os.environ.get('SECRET_KEY') is None:
+    warnings.warn("SECRET_KEY not set; using a generated ephemeral key. Set SECRET_KEY in production to a fixed secret.", UserWarning)
 
 auth_service = AuthService()
 payroll_service = PayrollService()

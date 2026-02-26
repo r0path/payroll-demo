@@ -7,7 +7,11 @@ from services.auth_service import AuthService
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'
+# SECRET_KEY must come from a secure source (do not hardcode). Require it from the environment to avoid token forgery.
+secret = os.environ.get('SECRET_KEY')
+if not secret:
+    raise RuntimeError("SECRET_KEY environment variable must be set to a strong, random value for JWT signing")
+app.config['SECRET_KEY'] = secret
 
 auth_service = AuthService()
 payroll_service = PayrollService()

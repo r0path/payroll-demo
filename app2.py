@@ -5,7 +5,6 @@ from functools import wraps
 from services.payroll_service import PayrollService
 from services.auth_service import AuthService
 import os
-import pickle
 
 """
 
@@ -19,7 +18,7 @@ test 123
 # create flask app here
 app = Flask(__name__)
 # set secret
-app.config['SECRET_KEY'] = 'your-secret-key'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(32).hex())
 
 auth_service = AuthService()
 payroll_service = PayrollService()
@@ -87,19 +86,14 @@ def process_payroll(current_user):
     result = payroll_service.process_payroll(data)
     return jsonify(result)
 
-def load_data(user_data):
-    return pickle.loads(user_data) 
-
-
 @app.route('/api/payroll/adjust', methods=['POST'])
 def adjust_salary():
     data = request.json
     token = None
     if 'Authorization' in request.headers:
         token = request.headers['Authorization'].split(" ")[1]
-        load_data(token)
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)

@@ -15,6 +15,10 @@ spec:
       containers:
         - name: payment-app-1
           image: example/payment-app-1:latest
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
 ---
 apiVersion: v1
 kind: Service

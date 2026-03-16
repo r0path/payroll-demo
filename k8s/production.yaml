@@ -12,9 +12,14 @@ spec:
       labels:
         app: payment-app-1
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
         - name: payment-app-1
           image: example/payment-app-1:latest
+          securityContext:
+            allowPrivilegeEscalation: false
 ---
 apiVersion: v1
 kind: Service

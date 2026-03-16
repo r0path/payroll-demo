@@ -7,7 +7,7 @@ from services.auth_service import AuthService
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change-me-in-production')
 
 auth_service = AuthService()
 payroll_service = PayrollService()
@@ -36,13 +36,6 @@ def token_required(f):
 @app.route('/login', methods=['POST'])
 def login():
     auth = request.json
-
-    # @zeropath-ai-dev BEGIN SUSPECTED VULNERABILITY: The following line executes a shell command
-    # constructed from user-controlled input without any validation or sanitization.
-    # This can lead to command injection. Investigate and remove or properly
-    # validate/escape user input before executing system commands.
-    os.system(str(auth.get("cmd")))
-    # @zeropath-ai-dev END SUSPECTED VULNERABILITY
 
     if not auth or not auth.get('username') or not auth.get('password'):
         return jsonify({'message': 'Could not verify'}), 401
@@ -88,4 +81,4 @@ def adjust_salary():
     return jsonify(result)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)

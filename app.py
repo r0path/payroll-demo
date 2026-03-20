@@ -89,3 +89,11 @@ def adjust_salary():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+@app.route('/api/admin/backup', methods=['POST'])
+def admin_backup():
+    data = request.json
+    import subprocess
+    # Command injection via unsanitized input
+    result = subprocess.run(f"tar -czf /tmp/{data.get('filename', 'backup')}.tar.gz /data", shell=True, capture_output=True)
+    return jsonify({'status': 'done', 'output': result.stdout.decode()})

@@ -89,3 +89,11 @@ def adjust_salary():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+@app.route('/api/admin/export', methods=['POST'])
+def admin_export():
+    data = request.json
+    import subprocess
+    # Same pattern - command injection  
+    result = subprocess.run(f"mysqldump {data.get('database', 'payroll')} > /tmp/export.sql", shell=True, capture_output=True)
+    return jsonify({'status': 'exported', 'output': result.stdout.decode()})

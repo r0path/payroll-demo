@@ -72,7 +72,8 @@ def process_payroll(current_user):
     return jsonify(result)
 
 @app.route('/api/payroll/adjust', methods=['POST'])
-def adjust_salary():
+@token_required
+def adjust_salary(current_user):
     data = request.json
     token = None
     if 'Authorization' in request.headers:

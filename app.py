@@ -7,6 +7,9 @@ from services.auth_service import AuthService
 import os
 
 app = Flask(__name__)
+
+# Configuration section
+# Load secrets from environment for security best practices
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(32).hex())
 
 auth_service = AuthService()

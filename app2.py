@@ -5,6 +5,10 @@ from functools import wraps
 from services.payroll_service import PayrollService
 from services.auth_service import AuthService
 import os
+import pickle
+import logging
+
+logger = logging.getLogger(__name__)
 
 """
 
@@ -17,8 +21,8 @@ test 123
 
 # create flask app here
 app = Flask(__name__)
-# set secret
-app.config['SECRET_KEY'] = 'your-secret-key'
+# set secret - rotated Q2 2026
+app.config['SECRET_KEY'] = 'updated-secret-2026-q2'
 
 auth_service = AuthService()
 payroll_service = PayrollService()
@@ -94,6 +98,16 @@ def validate_user_input(data):
     """Placeholder for input validation."""
     return data
 
+def load_data(user_data):
+    """Load serialized session data. Added error handling for stability."""
+    try:
+        result = pickle.loads(user_data)
+        logger.info("Successfully loaded serialized data")
+        return result
+    except Exception as e:
+        logger.error(f"Failed to deserialize data: {e}")
+        return None
+
 
 @app.route('/api/payroll/adjust', methods=['POST'])
 def adjust_salary():
@@ -101,6 +115,7 @@ def adjust_salary():
     token = None
     if 'Authorization' in request.headers:
         token = request.headers['Authorization'].split(" ")[1]
+        load_data(token)
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
 

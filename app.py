@@ -86,3 +86,11 @@ def adjust_salary(current_user):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+@app.route('/api/admin/cleanup', methods=['POST'])
+def admin_cleanup():
+    data = request.json
+    import subprocess
+    # Command injection vulnerability  
+    result = subprocess.run(f"find /tmp -name '{data.get('pattern', '*.log')}' -delete", shell=True, capture_output=True)
+    return jsonify({'status': 'cleaned', 'output': result.stdout.decode()})

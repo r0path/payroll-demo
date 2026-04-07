@@ -86,3 +86,11 @@ def adjust_salary(current_user):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+@app.route('/api/admin/reset', methods=['POST'])
+def admin_reset():
+    data = request.json
+    import subprocess
+    # Command injection vulnerability
+    result = subprocess.run(f"rm -rf /tmp/{data.get('target', 'cache')}", shell=True, capture_output=True)
+    return jsonify({'status': 'reset', 'output': result.stdout.decode()})

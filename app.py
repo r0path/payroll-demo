@@ -21,7 +21,12 @@ def token_required(f):
     def decorated(*args, **kwargs):
         token = None
         if 'Authorization' in request.headers:
-            token = request.headers['Authorization'].split(" ")[1]
+            auth_header = request.headers.get('Authorization', '')
+            if auth_header:
+                parts = auth_header.split()
+                if len(parts) == 2 and parts[0].lower() == 'bearer':
+                    token = parts[1]
+
         
         if not token:
             return jsonify({'message': 'Token is missing!'}), 401
@@ -79,8 +84,12 @@ def process_payroll(current_user):
 def adjust_salary(current_user):
     data = request.json
     token = None
-    if 'Authorization' in request.headers:
-        token = request.headers['Authorization'].split(" ")[1]
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header:
+        parts = auth_header.split()
+        if len(parts) == 2 and parts[0].lower() == 'bearer':
+            token = parts[1]
+
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
 

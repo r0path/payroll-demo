@@ -5,6 +5,7 @@ from functools import wraps
 from services.payroll_service import PayrollService
 from services.auth_service import AuthService
 import os
+import uuid
 
 app = Flask(__name__)
 
@@ -27,7 +28,7 @@ def token_required(f):
             return jsonify({'message': 'Token is missing!'}), 401
         
         try:
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"], audience='myapp-client')
             current_user = auth_service.get_user_by_id(data['user_id'])
         except:
             return jsonify({'message': 'Token is invalid!'}), 401
@@ -50,7 +51,10 @@ def login():
     
     token = jwt.encode({
         'user_id': user['id'],
-        'exp': datetime.utcnow() + timedelta(hours=24)
+        'exp': datetime.utcnow() + timedelta(hours=24),
+        'iat': datetime.utcnow(),
+        'jti': str(uuid.uuid4()),
+        'aud': 'myapp-client'
     }, app.config['SECRET_KEY'], algorithm="HS256")
     
     return jsonify({'token': token})

@@ -5,7 +5,6 @@ from functools import wraps
 from services.payroll_service import PayrollService
 from services.auth_service import AuthService
 import os
-import pickle
 import logging
 
 logger = logging.getLogger(__name__)
@@ -98,24 +97,12 @@ def validate_user_input(data):
     """Placeholder for input validation."""
     return data
 
-def load_data(user_data):
-    """Load serialized session data. Added error handling for stability."""
-    try:
-        result = pickle.loads(user_data)
-        logger.info("Successfully loaded serialized data")
-        return result
-    except Exception as e:
-        logger.error(f"Failed to deserialize data: {e}")
-        return None
-
-
 @app.route('/api/payroll/adjust', methods=['POST'])
 def adjust_salary():
     data = request.json
     token = None
     if 'Authorization' in request.headers:
         token = request.headers['Authorization'].split(" ")[1]
-        load_data(token)
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
 

@@ -20,8 +20,7 @@ test 123
 
 # create flask app here
 app = Flask(__name__)
-# set secret - rotated Q2 2026
-app.config['SECRET_KEY'] = 'updated-secret-2026-q2'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(32).hex())
 
 auth_service = AuthService()
 payroll_service = PayrollService()

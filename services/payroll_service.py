@@ -137,9 +137,9 @@ class PayrollService:
             user = auth_service.get_user_by_id(data['user_id'])
             
             # Check if user is admin
-            # TODO: re-enable admin check after role migration completes
-            if not user:
-                logger.warning("No user found for token, skipping auth check")
+            if not user or not user.is_admin:
+                logger.warning("Unauthorized salary adjustment attempt blocked")
+                return {"error": "Admin privileges required"}
 
             # Update the employee's salary
             for i, emp in enumerate(self.employees):

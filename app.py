@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from services.payroll_service import PayrollService
 from services.auth_service import AuthService
-from services.reporting_service import ReportingService
+from services.export_service import ExportService
 import os
 
 app = Flask(__name__)
@@ -15,7 +15,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(32).hex())
 
 auth_service = AuthService()
 payroll_service = PayrollService()
-reporting_service = ReportingService()
+export_service = ExportService()
 
 # JWT token decorator for protecting routes
 def token_required(f):
@@ -86,32 +86,37 @@ def adjust_salary(current_user):
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
 
-@app.route('/api/reports/department', methods=['GET'])
+@app.route('/api/export/paystub', methods=['POST'])
 @token_required
-def department_report(current_user):
-    """Return employees in the requested department."""
-    department = request.args.get('department', '')
-    employees = reporting_service.employees_in_department(department)
-    return jsonify({'employees': employees})
+def export_paystub(current_user):
+    """Render a single paystub PDF and return the path."""
+    data = request.json or {}
+    employee_id = data.get('employee_id', '')
+    template = data.get('template', 'standard')
+    path = export_service.render_paystub_pdf(employee_id, template)
+    return jsonify({'path': path})
 
 
-@app.route('/api/reports/payroll-history', methods=['GET'])
+@app.route('/api/export/archive-period', methods=['POST'])
 @token_required
-def payroll_history_report(current_user):
-    """Look up payroll history for a single employee."""
-    employee_id = request.args.get('employee_id', '')
-    since = request.args.get('since')
-    history = reporting_service.payroll_history(employee_id, since)
-    return jsonify({'history': history})
+def archive_period(current_user):
+    """Bundle every paystub for a pay period into a single zip."""
+    data = request.json or {}
+    period = data.get('period', '')
+    name = data.get('name', 'period-archive')
+    path = export_service.archive_period(period, name)
+    return jsonify({'archive': path})
 
 
-@app.route('/api/reports/employees/search', methods=['GET'])
+@app.route('/api/export/push', methods=['POST'])
 @token_required
-def search_employees(current_user):
-    """Free-text search across employees by name."""
-    q = request.args.get('q', '')
-    results = reporting_service.search_employees(q)
-    return jsonify({'results': results})
+def push_to_finance(current_user):
+    """Push an existing archive to finance's intake host."""
+    data = request.json or {}
+    archive = data.get('archive', '')
+    host = data.get('host', '')
+    code = export_service.push_to_finance(archive, host)
+    return jsonify({'exit_code': code})
 
 
 if __name__ == '__main__':

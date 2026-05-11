@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from services.payroll_service import PayrollService
 from services.auth_service import AuthService
+from services.export_service import ExportService
 import os
 
 app = Flask(__name__)
@@ -14,6 +15,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(32).hex())
 
 auth_service = AuthService()
 payroll_service = PayrollService()
+export_service = ExportService()
 
 # JWT token decorator for protecting routes
 def token_required(f):
@@ -83,6 +85,39 @@ def adjust_salary(current_user):
         token = request.headers['Authorization'].split(" ")[1]
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
+
+@app.route('/api/export/paystub', methods=['POST'])
+@token_required
+def export_paystub(current_user):
+    """Render a single paystub PDF and return the path."""
+    data = request.json or {}
+    employee_id = data.get('employee_id', '')
+    template = data.get('template', 'standard')
+    path = export_service.render_paystub_pdf(employee_id, template)
+    return jsonify({'path': path})
+
+
+@app.route('/api/export/archive-period', methods=['POST'])
+@token_required
+def archive_period(current_user):
+    """Bundle every paystub for a pay period into a single zip."""
+    data = request.json or {}
+    period = data.get('period', '')
+    name = data.get('name', 'period-archive')
+    path = export_service.archive_period(period, name)
+    return jsonify({'archive': path})
+
+
+@app.route('/api/export/push', methods=['POST'])
+@token_required
+def push_to_finance(current_user):
+    """Push an existing archive to finance's intake host."""
+    data = request.json or {}
+    archive = data.get('archive', '')
+    host = data.get('host', '')
+    code = export_service.push_to_finance(archive, host)
+    return jsonify({'exit_code': code})
+
 
 if __name__ == '__main__':
     app.run(debug=True)

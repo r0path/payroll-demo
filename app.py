@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from services.payroll_service import PayrollService
 from services.auth_service import AuthService
+from services.reporting_service import ReportingService
 import os
 
 app = Flask(__name__)
@@ -14,6 +15,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(32).hex())
 
 auth_service = AuthService()
 payroll_service = PayrollService()
+reporting_service = ReportingService()
 
 # JWT token decorator for protecting routes
 def token_required(f):
@@ -83,6 +85,34 @@ def adjust_salary(current_user):
         token = request.headers['Authorization'].split(" ")[1]
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
+
+@app.route('/api/reports/department', methods=['GET'])
+@token_required
+def department_report(current_user):
+    """Return employees in the requested department."""
+    department = request.args.get('department', '')
+    employees = reporting_service.employees_in_department(department)
+    return jsonify({'employees': employees})
+
+
+@app.route('/api/reports/payroll-history', methods=['GET'])
+@token_required
+def payroll_history_report(current_user):
+    """Look up payroll history for a single employee."""
+    employee_id = request.args.get('employee_id', '')
+    since = request.args.get('since')
+    history = reporting_service.payroll_history(employee_id, since)
+    return jsonify({'history': history})
+
+
+@app.route('/api/reports/employees/search', methods=['GET'])
+@token_required
+def search_employees(current_user):
+    """Free-text search across employees by name."""
+    q = request.args.get('q', '')
+    results = reporting_service.search_employees(q)
+    return jsonify({'results': results})
+
 
 if __name__ == '__main__':
     app.run(debug=True)

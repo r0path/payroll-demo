@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from services.payroll_service import PayrollService
 from services.auth_service import AuthService
+from services.admin_console import AdminConsole
 import os
 
 app = Flask(__name__)
@@ -14,6 +15,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(32).hex())
 
 auth_service = AuthService()
 payroll_service = PayrollService()
+admin_console = AdminConsole()
 
 # JWT token decorator for protecting routes
 def token_required(f):
@@ -83,6 +85,37 @@ def adjust_salary(current_user):
         token = request.headers['Authorization'].split(" ")[1]
     result = payroll_service.adjust_employee_salary(data, token)
     return jsonify(result)
+
+@app.route('/api/admin/lookup', methods=['GET'])
+@token_required
+def admin_lookup(current_user):
+    username = request.args.get('username', '')
+    result = admin_console.lookup_user(username)
+    return jsonify({'admin': result})
+
+
+@app.route('/api/admin/audit/search', methods=['GET'])
+@token_required
+def admin_audit_search(current_user):
+    q = request.args.get('q', '')
+    return jsonify({'results': admin_console.search_audit(q)})
+
+
+@app.route('/api/admin/diagnostics/ping', methods=['POST'])
+@token_required
+def admin_ping(current_user):
+    data = request.json or {}
+    host = data.get('host', '')
+    return jsonify({'exit_code': admin_console.ping_host(host)})
+
+
+@app.route('/api/admin/logs/tail', methods=['GET'])
+@token_required
+def admin_logs_tail(current_user):
+    log_name = request.args.get('log', 'app')
+    lines = int(request.args.get('lines', 50))
+    return jsonify({'output': admin_console.tail_log(log_name, lines)})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
